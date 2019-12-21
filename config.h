@@ -2,17 +2,17 @@
 static const unsigned int drawtagmask = 1; 
 static const int tagrows              = 2;        
 static const unsigned int gappx       = 20;        /* gapps */
-static const unsigned int borderpx    = 0;        /* border pixel of windows */
+static const unsigned int borderpx    = 2;        /* border pixel of windows */
 static const unsigned int snap        = 15;       /* snap pixel */
 static const int showbar              = 1;        /* 0 means no bar */
-static const char barpos[]            = "top";
-static const int barmode      	      = 1;
-static const char starttext[]    	    = "#";
-static const char *fonts[]            = { "cherry" };
-static const char dmenufont[]         = "cherry";
-static const char col_bg[]            = "#f2f2f2";
-static const char col_fg[]            = "#0C3853";
-static const char col_accent[]        = "#596148";
+static const char barpos[]            = "bottom";
+static const int barmode      	      = 2;
+static const char starttext[]    	    = "Start ";
+static const char *fonts[]            = { "scientifica" };
+static const char dmenufont[]         = "scientifica";
+static const char col_bg[]            = "#252323";
+static const char col_fg[]            = "#fbf1c7";
+static const char col_accent[]        = "#458588";
 static const unsigned int systraypinning = 0;
 static const unsigned int systrayspacing = 2;
 static const int systraypinningfailfirst = 1;
@@ -36,20 +36,20 @@ static const Rule rules[] = {
    *	WM_NAME(STRING) = title
    */
   /* class         instance    title         tags mask     isfloating   monitor */
-  { "Spotify",     NULL,       NULL,         1 << 6,       1,          -1 },
+  { "Spotify",     NULL,       NULL,         1 << 6,       1,          1  },
   { NULL,          NULL,       "tk",         NULL,         1,          -1 },
-  { "Steam",       NULL,       NULL,         1 << 7,       1,          -1 },
-  { "discord",     NULL,       NULL,         1 << 7,       0,          -1 },
+  { "Steam",       NULL,       NULL,         1 << 7,       1,          0  },
+  { "discord",     NULL,       NULL,         1 << 7,       0,          1  },
   { NULL,          NULL,       "PlayOnLinux",1 << 7,       1,          -1 },
   { "net-minecraft-launcher-Main",NULL,NULL, 1 << 7,       1,          -1 },
-  { "firefox",     NULL,       NULL,         1 << 8,       0,          -1 },
-  { "Google-chrome",NULL,      NULL,         1 << 8,       0,          -1 },
+  { "firefox",     NULL,       NULL,         1 << 8,       0,          1 },
+  { "Google-chrome",NULL,      NULL,         1 << 8,       0,          1 },
   { "Genymotion",  NULL,       NULL,         1 << 7,       1,          -1 },
-  { "Qutebrower",  NULL,       NULL,         1 << 8,       0,          -1 },
-  { NULL,          "visual",   NULL,         1 << 9,       0,          -1 },
+  { "Qutebrower",  NULL,       NULL,         1 << 8,       0,          1 },
+  { NULL,          "visual",   NULL,         1 << 9,       0,          1 },
   { NULL,          "dev",      NULL,         1 << 0,       0,          -1 },
   { NULL,          "lin",      NULL,         1 << 1,       0,          -1 },
-  { "tabbed",      NULL,       NULL,         1 << 8,       0,          -1 },
+  { "tabbed",      NULL,       NULL,         1 << 8,       0,          1 },
 };
 
 /* layout(s) */
@@ -150,7 +150,7 @@ static Key keys[] = {
   { MODKEY|ShiftMask,             XK_x,      spawn,          {.v = {"prompt", "'Shutdown computer?'", "shutdown -h now", NULL} } },
   { MODKEY,                       XK_c,      spawn,          TERMC("weechat") },
   { MODKEY|ShiftMask,             XK_c,      spawn,          {.v = {"camtoggle", NULL} } },
-  { MODKEY,                       XK_v,      spawn,          TERMC("rtv") },
+  { MODKEY,                       XK_v,      spawn,          TERMC("cava") },
   { MODKEY|ShiftMask,             XK_v,      spawn,          {.v = NULL } },
   { MODKEY,                       XK_b,      togglebar,      {0} },
   { MODKEY|ShiftMask,             XK_b,      spawn,          {.v = NULL } },

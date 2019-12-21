@@ -188,6 +188,7 @@ static void detachstack(Client *c);
 static Monitor *dirtomon(int dir);
 static void drawbar(Monitor *m);
 static void drawbars(void);
+static void drawtaggrid(Monitor *m, int *x_pos, unsigned int occ);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
 static void focus(Client *c);
@@ -458,11 +459,13 @@ void
 buttonpress(XEvent *e)
 {
 	unsigned int i, x, click;
+  unsigned int columns;
 	Arg arg = {0};
 	Client *c;
 	Monitor *m;
 	XButtonPressedEvent *ev = &e->xbutton;
 
+  columns = LENGTH(tags) / tagrows + ((LENGTH(tags) % tagrows > 0) ? 1 : 0);
 	click = ClkRootWin;
 	/* focus monitor if necessary */
 	if ((m = wintomon(ev->window)) && m != selmon) {
@@ -472,13 +475,23 @@ buttonpress(XEvent *e)
 	}
 	if (ev->window == selmon->barwin) {
 		i = x = 0;
+    if (drawtagmask == 0 )
 		do
 			x += TEXTW(tags[i]);
 		while (ev->x >= x && ++i < LENGTH(tags));
-		if (i < LENGTH(tags)) {
+    if(i < LENGTH(tags) && (drawtagmask == 0)) {
 			click = ClkTagBar;
 			arg.ui = 1 << i;
-		} else if (ev->x < x + blw)
+    } else if(ev->x < x + columns * bh / tagrows && (drawtagmask == 1)) {
+      click = ClkTagBar;
+			i = (ev->x - x) / (bh / tagrows);
+			i = i + columns * (ev->y / (bh / tagrows));
+			if (i >= LENGTH(tags)) {
+				i = LENGTH(tags) - 1;
+			}
+			arg.ui = 1 << i;
+		}
+    else if(ev->x < x + blw + columns * bh / tagrows)
 			click = ClkLtSymbol;
 		else if (ev->x > selmon->ww - TEXTW(stext) - getsystraywidth())
 			click = ClkStatusText;
@@ -790,10 +803,10 @@ dirtomon(int dir)
 void
 drawbar(Monitor *m)
 {
-	int x, w, sw = 0, stw = 0;
+  int x, w, sw = 0, stw, tw, mw, ew = 0;
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
-	unsigned int i, occ = 0, urg = 0;
+	unsigned int i, occ = 0, urg = 0, n = 0;
 	Client *c;
 
 	if(showsystray && m == systraytomon(m))
@@ -808,11 +821,14 @@ drawbar(Monitor *m)
 
 	resizebarwin(m);
 	for (c = m->clients; c; c = c->next) {
+    if (ISVISIBLE(c))
+      n++;
 		occ |= c->tags;
 		if (c->isurgent)
 			urg |= c->tags;
 	}
 	x = 0;
+  if (drawtagmask == 0)
 	for (i = 0; i < LENGTH(tags); i++) {
 		w = TEXTW(tags[i]);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
@@ -822,6 +838,9 @@ drawbar(Monitor *m)
 				m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
 				urg & 1 << i);
 		x += w;
+	}
+  if (drawtagmask == 1) {
+  	drawtaggrid(m,&x,occ);
 	}
 	w = blw = TEXTW(m->ltsymbol);
 	drw_setscheme(drw, scheme[SchemeNorm]);
@@ -847,7 +866,41 @@ drawbar(Monitor *m)
 		  } else {
 		  	drw_setscheme(drw, scheme[SchemeNorm]);
 		  	drw_rect(drw, x, 0, w, bh, 1, 1);
-		  }
+      }
+    } else if (barmode == 2) {
+      if (n > 0) {
+			  tw = TEXTW(m->sel->name) + lrpad;
+			  mw = (tw >= w || n == 1) ? 0 : (w - tw) / (n - 1);
+
+			  i = 0;
+			  for (c = m->clients; c; c = c->next) {
+			  	if (!ISVISIBLE(c) || c == m->sel)
+			  		continue;
+			  	tw = TEXTW(c->name);
+			  	if(tw < mw)
+			  		ew += (mw - tw);
+			  	else
+			  		i++;
+			  }
+			  if (i > 0)
+			  	mw += ew / i;
+
+			  for (c = m->clients; c; c = c->next) {
+			  	if (!ISVISIBLE(c))
+			  		continue;
+			  	tw = MIN(m->sel == c ? w : mw, TEXTW(c->name));
+
+			  	drw_setscheme(drw, scheme[m->sel == c ? SchemeSel : SchemeNorm]);
+			  	if (tw > 0) /* trap special handling of 0 in drw_text */
+			  		drw_text(drw, x, 0, tw, bh, lrpad / 2, c->name, 0);
+			  	if (c->isfloating)
+			  		drw_rect(drw, x + boxs, boxs, boxw, boxw, c->isfixed, 0);
+			  	x += tw;
+			  	w -= tw;
+			    }
+        }
+      drw_setscheme(drw, scheme[SchemeNorm]);
+      drw_rect(drw, x, 0, w, bh, 1, 1);
     }
 	}
 	drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
@@ -860,6 +913,49 @@ drawbars(void)
 
 	for (m = mons; m; m = m->next)
 		drawbar(m);
+}
+
+void drawtaggrid(Monitor *m, int *x_pos, unsigned int occ)
+{
+    unsigned int x, y, h, max_x, columns;
+    int invert, i,j, k;
+
+    h = bh / tagrows;
+    x = max_x = *x_pos;
+    y = 0;
+    columns = LENGTH(tags) / tagrows + ((LENGTH(tags) % tagrows > 0) ? 1 : 0);
+
+    /* Firstly we will fill the borders of squares */
+
+    XSetForeground(drw->dpy, drw->gc, scheme[SchemeNorm][ColBg].pixel);
+    XFillRectangle(dpy, drw->drawable, drw->gc, x, y, h*columns + 1, bh);
+
+    /* We will draw LENGTH(tags) squares in tagraws raws. */
+	for(j = 0,  i= 0; j < tagrows; j++) {
+        x = *x_pos;
+        for (k = 0; k < columns && i < LENGTH(tags); k++, i++) {
+		    invert = m->tagset[m->seltags] & 1 << i ? 0 : 1;
+
+            /* Select active color for current square */
+            XSetForeground(drw->dpy, drw->gc, !invert ? scheme[SchemeSel][ColBg].pixel :
+                                scheme[SchemeNorm][ColFg].pixel);
+            XFillRectangle(dpy, drw->drawable, drw->gc, x+1, y+1, h-1, h-1);
+
+            /* Mark square if tag has client */
+            if (occ & 1 << i) {
+                XSetForeground(drw->dpy, drw->gc, !invert ? scheme[SchemeSel][ColFg].pixel :
+                                scheme[SchemeNorm][ColBg].pixel);
+                XFillRectangle(dpy, drw->drawable, drw->gc, x + 1, y + 1,
+                               h / 2, h / 2);
+            }
+		    x += h;
+            if (x > max_x) {
+                max_x = x;
+            }
+        }
+        y += h;
+	}
+    *x_pos = max_x + 1;
 }
 
 void
