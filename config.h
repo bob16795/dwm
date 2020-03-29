@@ -2,17 +2,17 @@
 static const unsigned int drawtagmask = 1; 
 static const int tagrows              = 2;        
 static const unsigned int gappx       = 20;        /* gapps */
-static const unsigned int borderpx    = 2;        /* border pixel of windows */
+static const unsigned int borderpx    = 0;        /* border pixel of windows */
 static const unsigned int snap        = 15;       /* snap pixel */
 static const int showbar              = 1;        /* 0 means no bar */
-static const char barpos[]            = "bottom";
-static const int barmode      	      = 2;
-static const char starttext[]    	    = "Start ";
-static const char *fonts[]            = { "scientifica" };
-static const char dmenufont[]         = "scientifica";
-static const char col_bg[]            = "#252323";
-static const char col_fg[]            = "#fbf1c7";
-static const char col_accent[]        = "#458588";
+static const char barpos[]            = "top";
+static const int barmode      	      = 1;
+static const char starttext[]         = "#";
+static const char *fonts[]            = { "cherry" };
+static const char dmenufont[]         = "cherry";
+static const char col_bg[]            = "#f2f2f2";
+static const char col_fg[]            = "#0C3853";
+static const char col_accent[]        = "#596148";
 static const unsigned int systraypinning = 0;
 static const unsigned int systrayspacing = 2;
 static const int systraypinningfailfirst = 1;
@@ -87,7 +87,7 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() 
 static const char *dmenucmd[] = { "jgmenu_run", NULL };
 //static const char *dmenucmd[] = { "rofi", "-show", "run", NULL };
 static const char *termcmd[]  = { "alacritty", NULL };
-static const char *webcmd[]   = { "google-chrome-stable", NULL };
+static const char *webcmd[]   = { "qutebrowser", NULL };
 
 #define TERMC(cmd) { .v = (const char*[]){ "alacritty", "-e", cmd, NULL } }
 
